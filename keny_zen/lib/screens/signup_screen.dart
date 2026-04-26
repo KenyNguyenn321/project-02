@@ -11,19 +11,19 @@ class SignupScreen extends StatefulWidget {
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
-// handles signup logic and form state
+// handles signup form and Firebase signup logic
 class _SignupScreenState extends State<SignupScreen> {
   // controllers for input fields
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // auth service instance
+  // instance of auth service
   final AuthService _authService = AuthService();
 
-  // loading state
+  // track loading state
   bool _isLoading = false;
 
-  // signup function
+  // function to handle signup
   void _signup() async {
     setState(() {
       _isLoading = true;
@@ -36,17 +36,31 @@ class _SignupScreenState extends State<SignupScreen> {
         _passwordController.text.trim(),
       );
 
-      // navigate to home after success
-      Navigator.pushReplacement(
-        context,
+      // stop if widget is no longer active
+      if (!mounted) return;
+
+      // save safe context after async check
+      final navigator = Navigator.of(context);
+
+      // navigate to home if signup works
+      navigator.pushReplacement(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } catch (e) {
+      // stop if widget is no longer active
+      if (!mounted) return;
+
+      // save safe context after async check
+      final messenger = ScaffoldMessenger.of(context);
+
       // show error message
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
     }
+
+    // stop if widget is no longer active
+    if (!mounted) return;
 
     setState(() {
       _isLoading = false;
@@ -54,13 +68,22 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   @override
+  void dispose() {
+    // clean up controllers
+    _emailController.dispose();
+    _passwordController.dispose();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // page padding
+      // center content
       body: Padding(
         padding: const EdgeInsets.all(24.0),
 
-        // center content
+        // keep content centered
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -98,7 +121,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
             const SizedBox(height: 12),
 
-            // go back to login
+            // navigate back to login screen
             TextButton(
               onPressed: () {
                 Navigator.pushReplacement(
