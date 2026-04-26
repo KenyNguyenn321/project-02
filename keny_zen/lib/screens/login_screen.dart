@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
+import 'signup_screen.dart';
 
 // login screen for existing users
 class LoginScreen extends StatefulWidget {
@@ -10,7 +11,7 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-// handles input + login logic
+// handles input and login logic
 class _LoginScreenState extends State<LoginScreen> {
   // controllers for input fields
   final TextEditingController _emailController = TextEditingController();
@@ -35,21 +36,39 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
 
+      // stop if widget is no longer active
+      if (!mounted) return;
+
       // navigate to home if success
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } catch (e) {
+      // stop if widget is no longer active
+      if (!mounted) return;
+
       // show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
     }
 
+    // stop if widget is no longer active
+    if (!mounted) return;
+
     setState(() {
       _isLoading = false;
     });
+  }
+
+  @override
+  void dispose() {
+    // clean up controllers
+    _emailController.dispose();
+    _passwordController.dispose();
+
+    super.dispose();
   }
 
   @override
@@ -58,6 +77,8 @@ class _LoginScreenState extends State<LoginScreen> {
       // center content
       body: Padding(
         padding: const EdgeInsets.all(24.0),
+
+        // keep content centered
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -65,6 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
               'Keny-Zen Login',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
+
             const SizedBox(height: 24),
 
             // email input
@@ -91,6 +113,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _login,
                     child: const Text('Login'),
                   ),
+
+            const SizedBox(height: 12),
+
+            // navigate to signup screen
+            TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SignupScreen()),
+                );
+              },
+              child: const Text('Need an account? Sign up'),
+            ),
           ],
         ),
       ),
