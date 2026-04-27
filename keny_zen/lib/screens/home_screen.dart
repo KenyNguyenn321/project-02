@@ -1,77 +1,142 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'entry_history_screen.dart';
+import 'insights_screen.dart';
 import 'login_screen.dart';
+import 'settings_screen.dart';
 
 // main dashboard after login
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // auth service instance
-    final AuthService authService = AuthService();
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
+// controls bottom navigation state
+class _HomeScreenState extends State<HomeScreen> {
+  // selected bottom nav index
+  int _selectedIndex = 0;
+
+  // auth service instance
+  final AuthService _authService = AuthService();
+
+  // list of main screens
+  final List<Widget> _screens = const [
+    DashboardContent(),
+    EntryHistoryScreen(),
+    InsightsScreen(),
+    SettingsScreen(),
+  ];
+
+  // update current tab
+  void _onTabSelected(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  // logout user
+  void _logout() async {
+    await _authService.logout();
+
+    // stop if widget is no longer active
+    if (!mounted) return;
+
+    // return to login screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      // top app bar
       appBar: AppBar(
         title: const Text('Keny-Zen'),
 
-        // logout button
+        // logout action
         actions: [
           IconButton(
+            onPressed: _logout,
             icon: const Icon(Icons.logout),
-
-            // logout user and go back to login
-            onPressed: () async {
-              await authService.logout();
-
-              if (!context.mounted) return;
-
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-              );
-            },
           ),
         ],
       ),
 
-      // main content
-      body: const Padding(
-        padding: EdgeInsets.all(16.0),
+      // show selected screen
+      body: _screens[_selectedIndex],
 
-        // simple placeholder UI for now
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Today’s Reflection',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-
-            SizedBox(height: 16),
-
-            // placeholder recent entry
-            Text(
-              '"Start your journaling journey..."',
-              style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
-            ),
-
-            SizedBox(height: 8),
-
-            Text(
-              '[No entries yet]',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
+      // bottom navigation tabs
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onTabSelected,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book),
+            label: 'Entries',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: 'Insights',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
 
-      // floating button to add entry (we build next)
+      // add entry button placeholder
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // placeholder for next screen
+          // add entry navigation will be added next
         },
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+// dashboard tab content
+class DashboardContent extends StatelessWidget {
+  const DashboardContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.all(16.0),
+
+      // dashboard content
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Today’s Reflection',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+
+          SizedBox(height: 16),
+
+          Text(
+            '"Start your journaling journey..."',
+            style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+          ),
+
+          SizedBox(height: 8),
+
+          Text(
+            '[No entries yet]',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
       ),
     );
   }
