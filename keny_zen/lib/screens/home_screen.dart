@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/journal_entry.dart';
 import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
 import 'add_entry_screen.dart';
 import 'entry_history_screen.dart';
 import 'insights_screen.dart';
@@ -118,33 +120,99 @@ class DashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(16.0),
+    // service instances
+    final AuthService authService = AuthService();
+    final FirestoreService firestoreService = FirestoreService();
 
-      // dashboard content
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Today’s Reflection',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+    // current signed-in user
+    final user = authService.currentUser;
+
+    // show message if user is missing
+    if (user == null) {
+      return const Center(
+        child: Text('Please log in to view dashboard.'),
+      );
+    }
+
+    return StreamBuilder<List<JournalEntry>>(
+      // listen to user entries
+      stream: firestoreService.getEntries(user.uid),
+
+      // rebuild dashboard with latest data
+      builder: (context, snapshot) {
+        // show loading state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        // show error state
+        if (snapshot.hasError) {
+          return Center(
+            child: Text('Error loading dashboard: ${snapshot.error}'),
+          );
+        }
+
+        // get entries
+        final entries = snapshot.data ?? [];
+
+        // latest entry if it exists
+        final JournalEntry? latestEntry = entries.isEmpty ? null : entries.first;
+
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+
+          // dashboard content
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Today’s Reflection',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 16),
+
+              // show latest entry card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: latestEntry == null
+                      ? const Text('No entries yet. Tap + to add one.')
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Recent Entry:',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            Text(
+                              latestEntry.content,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            Text('Mood: ${latestEntry.mood}'),
+                          ],
+                        ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // show total entries
+              Text(
+                'Total Entries: ${entries.length}',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ],
           ),
-
-          SizedBox(height: 16),
-
-          Text(
-            '"Start your journaling journey..."',
-            style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
-          ),
-
-          SizedBox(height: 8),
-
-          Text(
-            '[No entries yet]',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
