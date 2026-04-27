@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/journal_entry.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import 'entry_detail_screen.dart';
 
 // displays saved journal entries
 class EntryHistoryScreen extends StatelessWidget {
@@ -70,6 +71,16 @@ class EntryHistoryScreen extends StatelessWidget {
                 ),
                 subtitle: Text('Mood: ${entry.mood}'),
                 trailing: const Icon(Icons.arrow_forward_ios),
+
+                // open entry details
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EntryDetailScreen(entry: entry),
+                    ),
+                  );
+                },
               ),
             );
           },
