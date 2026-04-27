@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'add_entry_screen.dart';
 import 'entry_history_screen.dart';
 import 'insights_screen.dart';
 import 'login_screen.dart';
@@ -50,6 +51,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // open add entry screen
+  void _openAddEntryScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AddEntryScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,11 +103,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      // add entry button placeholder
+      // add entry button
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // add entry navigation will be added next
-        },
+        onPressed: _openAddEntryScreen,
         child: const Icon(Icons.add),
       ),
     );
