@@ -60,6 +60,31 @@ class InsightsScreen extends StatelessWidget {
     return 'Your entries show mixed emotions. Continue journaling to better understand your patterns.';
   }
 
+  // build one simple mood bar
+  Widget _buildMoodBar(String mood, int count, int maxCount) {
+    final double percent = maxCount == 0 ? 0 : count / maxCount;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+
+      // mood row
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$mood ($count)'),
+
+          const SizedBox(height: 6),
+
+          // visual bar background
+          LinearProgressIndicator(
+            value: percent,
+            minHeight: 10,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // service instances
@@ -106,7 +131,12 @@ class InsightsScreen extends StatelessWidget {
         // generated wellness suggestion
         final insight = _generateInsight(entries, topMood);
 
-        return Padding(
+        // max mood count for chart scaling
+        final int maxCount = moodCounts.isEmpty
+            ? 0
+            : moodCounts.values.reduce((a, b) => a > b ? a : b);
+
+        return SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
 
           // insights layout
@@ -140,21 +170,30 @@ class InsightsScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               const Text(
-                'Mood Frequency',
+                'Mood Frequency Chart',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
 
               const SizedBox(height: 8),
 
-              // mood frequency list
-              ...moodCounts.entries.map((moodEntry) {
-                return Card(
-                  child: ListTile(
-                    title: Text(moodEntry.key),
-                    trailing: Text('${moodEntry.value}'),
-                  ),
-                );
-              }),
+              // chart card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: moodCounts.isEmpty
+                      ? const Text('No mood data yet.')
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: moodCounts.entries.map((moodEntry) {
+                            return _buildMoodBar(
+                              moodEntry.key,
+                              moodEntry.value,
+                              maxCount,
+                            );
+                          }).toList(),
+                        ),
+                ),
+              ),
 
               const SizedBox(height: 16),
 
