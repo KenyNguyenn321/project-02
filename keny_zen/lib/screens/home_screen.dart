@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/journal_entry.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../utils/mood_colors.dart';
 import 'add_entry_screen.dart';
 import 'entry_history_screen.dart';
 import 'insights_screen.dart';
@@ -161,16 +162,33 @@ class DashboardContent extends StatelessWidget {
         // empty state
         if (entries.isEmpty) {
           return const Center(
-            child: Text(
-              'No entries yet.\nTap + to start journaling.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.self_improvement, size: 72, color: Colors.blue),
+                  SizedBox(height: 16),
+                  Text(
+                    'Start your first reflection',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Tap + to write a journal entry and begin tracking your mood patterns.',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           );
         }
 
         // latest entry
         final latestEntry = entries.first;
+
+        // mood color
+        final moodColor = getMoodColor(latestEntry.mood);
 
         return Padding(
           padding: const EdgeInsets.all(16.0),
@@ -208,11 +226,28 @@ class DashboardContent extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
 
+                      const SizedBox(height: 12),
+
+                      // mood tag
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: moodColor.withAlpha(45),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          latestEntry.mood,
+                          style: TextStyle(
+                            color: moodColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(height: 8),
-
-                      Text('Mood: ${latestEntry.mood}'),
-
-                      const SizedBox(height: 4),
 
                       Text('Date: ${_formatDate(latestEntry.createdAt)}'),
                     ],
@@ -222,9 +257,19 @@ class DashboardContent extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              Text(
-                'Total Entries: ${entries.length}',
-                style: const TextStyle(fontSize: 16),
+              // total entry count
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.book),
+                  title: const Text('Total Entries'),
+                  trailing: Text(
+                    '${entries.length}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

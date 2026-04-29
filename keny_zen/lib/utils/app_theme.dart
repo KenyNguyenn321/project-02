@@ -3,10 +3,23 @@ import 'package:flutter/material.dart';
 // stores app-wide calm blue theme
 class AppTheme {
   // calm blue color palette
-  static const Color deepBlue = Color(0xFF1565C0);
+  static const Color deepBlue = Color(0xFF0D47A1);
+  static const Color oceanBlue = Color(0xFF1565C0);
   static const Color softBlue = Color(0xFF64B5F6);
   static const Color paleBlue = Color(0xFFE3F2FD);
-  static const Color calmBackground = Color(0xFFF3F9FF);
+  static const Color calmBackground = Color(0xFFF1F8FF);
+  static const Color tealAccent = Color(0xFF26A69A);
+
+  // reusable calm gradient
+  static const LinearGradient calmGradient = LinearGradient(
+    colors: [
+      deepBlue,
+      oceanBlue,
+      softBlue,
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   // light theme for Keny-Zen
   static ThemeData lightTheme = ThemeData(
@@ -15,7 +28,7 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: deepBlue,
       primary: deepBlue,
-      secondary: softBlue,
+      secondary: tealAccent,
       surface: Colors.white,
     ),
 
@@ -24,7 +37,7 @@ class AppTheme {
       backgroundColor: deepBlue,
       foregroundColor: Colors.white,
       centerTitle: true,
-      elevation: 2,
+      elevation: 3,
     ),
 
     // button styling
@@ -34,7 +47,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
     ),
@@ -43,15 +56,17 @@ class AppTheme {
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: deepBlue,
       foregroundColor: Colors.white,
+      elevation: 6,
     ),
 
     // card styling
     cardTheme: CardThemeData(
       color: Colors.white,
-      elevation: 3,
+      elevation: 4,
+      shadowColor: deepBlue.withAlpha(35),
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
       ),
     ),
 
@@ -60,10 +75,10 @@ class AppTheme {
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: deepBlue, width: 2),
       ),
     ),
@@ -73,6 +88,7 @@ class AppTheme {
       selectedItemColor: deepBlue,
       unselectedItemColor: Colors.grey,
       backgroundColor: Colors.white,
+      type: BottomNavigationBarType.fixed,
     ),
   );
 }

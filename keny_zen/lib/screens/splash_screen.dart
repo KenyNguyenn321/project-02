@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../utils/app_theme.dart';
+import '../widgets/zen_logo.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 
@@ -46,27 +48,44 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      // center app branding
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Keny-Zen',
-              style: TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.bold,
+    return Scaffold(
+      // gradient background
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.calmGradient,
+        ),
+
+        // center splash content
+        child: Center(
+          child: Card(
+            elevation: 8,
+            child: Padding(
+              padding: const EdgeInsets.all(28.0),
+
+              // logo and app branding
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  ZenLogo(size: 95),
+                  SizedBox(height: 18),
+                  Text(
+                    'Keny-Zen',
+                    style: TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Reflect and Reset',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  SizedBox(height: 24),
+                  CircularProgressIndicator(),
+                ],
               ),
             ),
-            SizedBox(height: 12),
-            Text(
-              'Reflect and Reset',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 24),
-            CircularProgressIndicator(),
-          ],
+          ),
         ),
       ),
     );
