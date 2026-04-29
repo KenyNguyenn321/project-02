@@ -7,6 +7,7 @@ class JournalEntry {
   final String content;
   final String mood;
   final DateTime createdAt;
+  final String? imageUrl;
 
   // create journal entry object
   JournalEntry({
@@ -15,6 +16,7 @@ class JournalEntry {
     required this.content,
     required this.mood,
     required this.createdAt,
+    this.imageUrl,
   });
 
   // convert Firestore document into JournalEntry
@@ -25,6 +27,7 @@ class JournalEntry {
       content: data['content'] ?? '',
       mood: data['mood'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
+      imageUrl: data['imageUrl'],
     );
   }
 
@@ -35,6 +38,7 @@ class JournalEntry {
       'content': content,
       'mood': mood,
       'createdAt': Timestamp.fromDate(createdAt),
+      'imageUrl': imageUrl,
     };
   }
 }
