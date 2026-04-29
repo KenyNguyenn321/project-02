@@ -8,6 +8,11 @@ import 'entry_detail_screen.dart';
 class EntryHistoryScreen extends StatelessWidget {
   const EntryHistoryScreen({super.key});
 
+  // format date for entry cards
+  String _formatDate(DateTime date) {
+    return '${date.month}/${date.day}/${date.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     // service instances
@@ -64,12 +69,17 @@ class EntryHistoryScreen extends StatelessWidget {
 
               // entry card content
               child: ListTile(
+                leading: entry.imageUrl == null
+                    ? const Icon(Icons.notes)
+                    : const Icon(Icons.image),
                 title: Text(
                   entry.content,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                subtitle: Text('Mood: ${entry.mood}'),
+                subtitle: Text(
+                  'Mood: ${entry.mood} • ${_formatDate(entry.createdAt)}',
+                ),
                 trailing: const Icon(Icons.arrow_forward_ios),
 
                 // open entry details
