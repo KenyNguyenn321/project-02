@@ -39,6 +39,42 @@ class InsightsScreen extends StatelessWidget {
     return topMood;
   }
 
+  // get entries from the last 7 days
+  List<JournalEntry> _getLastSevenDayEntries(List<JournalEntry> entries) {
+    final cutoffDate = DateTime.now().subtract(const Duration(days: 7));
+
+    // keep entries inside 7-day window
+    return entries.where((entry) {
+      return entry.createdAt.isAfter(cutoffDate);
+    }).toList();
+  }
+
+  // generate 7-day trend assistant message
+  String _generateSevenDayTrend(List<JournalEntry> entries) {
+    final recentEntries = _getLastSevenDayEntries(entries);
+
+    if (recentEntries.isEmpty) {
+      return 'No 7-day trend yet. Add entries this week to generate a trend summary.';
+    }
+
+    final recentMoodCounts = _countMoods(recentEntries);
+    final topRecentMood = _getMostFrequentMood(recentMoodCounts);
+
+    if (topRecentMood == 'Stressed' || topRecentMood == 'Overwhelmed') {
+      return '7-day trend: Stress-related moods appeared most often this week. Suggested action: take a short break, write one cause of stress, and choose one small task to complete first.';
+    }
+
+    if (topRecentMood == 'Sad') {
+      return '7-day trend: Sadness appeared often this week. Suggested action: write about what triggered the feeling and consider reaching out to someone you trust.';
+    }
+
+    if (topRecentMood == 'Happy' || topRecentMood == 'Calm') {
+      return '7-day trend: Your recent mood pattern is mostly positive. Suggested action: keep doing the routines or environments that supported this mood.';
+    }
+
+    return '7-day trend: Your moods are mixed this week. Suggested action: continue journaling to find clearer patterns over time.';
+  }
+
   // generate simple rule-based wellness insight
   String _generateInsight(List<JournalEntry> entries, String topMood) {
     if (entries.isEmpty) {
@@ -54,7 +90,7 @@ class InsightsScreen extends StatelessWidget {
     }
 
     if (topMood == 'Happy' || topMood == 'Calm') {
-      return 'Your recent entries show positive emotional patterns. Keep building habits that support this mood.';
+      return 'Your entries show positive emotional patterns. Keep building habits that support this mood.';
     }
 
     return 'Your entries show mixed emotions. Continue journaling to better understand your patterns.';
@@ -131,6 +167,9 @@ class InsightsScreen extends StatelessWidget {
         // generated wellness suggestion
         final insight = _generateInsight(entries, topMood);
 
+        // generated 7-day assistant insight
+        final sevenDayTrend = _generateSevenDayTrend(entries);
+
         // max mood count for chart scaling
         final int maxCount = moodCounts.isEmpty
             ? 0
@@ -198,6 +237,23 @@ class InsightsScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               const Text(
+                '7-Day Trend Assistant',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 8),
+
+              // must-solve 7-day assistant card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(sevenDayTrend),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              const Text(
                 'Generated Insight',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -209,6 +265,18 @@ class InsightsScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(insight),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // challenge boundary
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'These insights are rule-based wellness reflections only. Keny-Zen avoids diagnosis, avoids medical claims, and keeps the user in control of interpretation.',
+                  ),
                 ),
               ),
             ],

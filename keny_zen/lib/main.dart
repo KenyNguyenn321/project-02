@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
 import 'services/notification_service.dart';
+import 'utils/app_theme.dart';
 
 // entry point of app
 void main() async {
@@ -34,10 +35,8 @@ class MyApp extends StatelessWidget {
       // app title
       title: 'Keny-Zen',
 
-      // basic theme
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      // calm blue app theme
+      theme: AppTheme.lightTheme,
 
       // first screen
       home: const SplashScreen(),
