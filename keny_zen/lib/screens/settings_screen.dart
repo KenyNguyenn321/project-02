@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// allows user to manage preferences
+// allows user to manage wellness preferences
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -11,9 +11,6 @@ class SettingsScreen extends StatefulWidget {
 
 // manages settings switches
 class _SettingsScreenState extends State<SettingsScreen> {
-  // dark mode preference state
-  bool _darkModeEnabled = false;
-
   // daily reminder preference state
   bool _dailyReminderEnabled = false;
 
@@ -33,20 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
 
     setState(() {
-      _darkModeEnabled = prefs.getBool('darkModeEnabled') ?? false;
       _dailyReminderEnabled = prefs.getBool('dailyReminderEnabled') ?? false;
-    });
-  }
-
-  // save dark mode setting
-  void _saveDarkMode(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // save value locally
-    await prefs.setBool('darkModeEnabled', value);
-
-    setState(() {
-      _darkModeEnabled = value;
     });
   }
 
@@ -54,7 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _saveDailyReminder(bool value) async {
     final prefs = await SharedPreferences.getInstance();
 
-    // save value locally
+    // save reminder preference locally
     await prefs.setBool('dailyReminderEnabled', value);
 
     setState(() {
@@ -76,23 +60,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         const SizedBox(height: 16),
 
-        // dark mode setting
-        SwitchListTile(
-          title: const Text('Dark Mode'),
-          subtitle: const Text('Save dark mode preference locally'),
-          value: _darkModeEnabled,
-          onChanged: _saveDarkMode,
-        ),
-
         // daily reminder setting
         SwitchListTile(
           title: const Text('Daily Reminder'),
-          subtitle: const Text('Save journaling reminder preference locally'),
+          subtitle: const Text('Enable journaling reminder preference'),
           value: _dailyReminderEnabled,
           onChanged: _saveDailyReminder,
         ),
 
         const SizedBox(height: 16),
+
+        // privacy-safe wellness boundary
+        const Card(
+          child: ListTile(
+            leading: Icon(Icons.health_and_safety),
+            title: Text('Wellness Boundary'),
+            subtitle: Text(
+              'Keny-Zen provides reflection support and wellness suggestions only. It does not diagnose, treat, or replace professional healthcare.',
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
 
         // account info section
         const Card(
