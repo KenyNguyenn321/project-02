@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // allows user to manage preferences
 class SettingsScreen extends StatefulWidget {
@@ -10,11 +11,56 @@ class SettingsScreen extends StatefulWidget {
 
 // manages settings switches
 class _SettingsScreenState extends State<SettingsScreen> {
-  // dark mode placeholder state
+  // dark mode preference state
   bool _darkModeEnabled = false;
 
-  // daily reminder placeholder state
+  // daily reminder preference state
   bool _dailyReminderEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // load saved settings when screen opens
+    _loadSettings();
+  }
+
+  // load saved settings from local storage
+  void _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // stop if widget is no longer active
+    if (!mounted) return;
+
+    setState(() {
+      _darkModeEnabled = prefs.getBool('darkModeEnabled') ?? false;
+      _dailyReminderEnabled = prefs.getBool('dailyReminderEnabled') ?? false;
+    });
+  }
+
+  // save dark mode setting
+  void _saveDarkMode(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // save value locally
+    await prefs.setBool('darkModeEnabled', value);
+
+    setState(() {
+      _darkModeEnabled = value;
+    });
+  }
+
+  // save daily reminder setting
+  void _saveDailyReminder(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // save value locally
+    await prefs.setBool('dailyReminderEnabled', value);
+
+    setState(() {
+      _dailyReminderEnabled = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,25 +79,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // dark mode setting
         SwitchListTile(
           title: const Text('Dark Mode'),
-          subtitle: const Text('Toggle dark mode preference'),
+          subtitle: const Text('Save dark mode preference locally'),
           value: _darkModeEnabled,
-          onChanged: (value) {
-            setState(() {
-              _darkModeEnabled = value;
-            });
-          },
+          onChanged: _saveDarkMode,
         ),
 
         // daily reminder setting
         SwitchListTile(
           title: const Text('Daily Reminder'),
-          subtitle: const Text('Enable journaling reminder notifications'),
+          subtitle: const Text('Save journaling reminder preference locally'),
           value: _dailyReminderEnabled,
-          onChanged: (value) {
-            setState(() {
-              _dailyReminderEnabled = value;
-            });
-          },
+          onChanged: _saveDailyReminder,
         ),
 
         const SizedBox(height: 16),
