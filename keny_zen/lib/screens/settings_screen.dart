@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/notification_service.dart';
 
 // allows user to manage wellness preferences
 class SettingsScreen extends StatefulWidget {
@@ -9,10 +10,16 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-// manages settings switches
+// manages settings switches and notification status
 class _SettingsScreenState extends State<SettingsScreen> {
   // daily reminder preference state
   bool _dailyReminderEnabled = false;
+
+  // FCM token preview
+  String _notificationStatus = 'Not checked yet';
+
+  // notification service instance
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -20,6 +27,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     // load saved settings when screen opens
     _loadSettings();
+
+    // load notification status
+    _loadNotificationStatus();
   }
 
   // load saved settings from local storage
@@ -46,6 +56,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  // load notification permission and token status
+  void _loadNotificationStatus() async {
+    try {
+      // request notification permission
+      await _notificationService.requestPermission();
+
+      // get FCM token
+      final token = await _notificationService.getToken();
+
+      // stop if widget is no longer active
+      if (!mounted) return;
+
+      setState(() {
+        _notificationStatus = token == null
+            ? 'FCM token not available yet'
+            : 'FCM connected: ${token.substring(0, 12)}...';
+      });
+    } catch (e) {
+      // stop if widget is no longer active
+      if (!mounted) return;
+
+      setState(() {
+        _notificationStatus = 'Notification setup unavailable';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -68,9 +105,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onChanged: _saveDailyReminder,
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
 
-        // privacy-safe wellness boundary
+        // notification status card
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.notifications_active),
+            title: const Text('Notification Setup'),
+            subtitle: Text(_notificationStatus),
+            trailing: IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _loadNotificationStatus,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // wellness boundary note
         const Card(
           child: ListTile(
             leading: Icon(Icons.health_and_safety),

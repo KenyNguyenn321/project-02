@@ -6,15 +6,15 @@ class NotificationService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
   // request notification permission
-  Future<void> requestPermission() async {
-    await _messaging.requestPermission(
+  Future<NotificationSettings> requestPermission() async {
+    return await _messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
   }
 
-  // get device FCM token for testing
+  // get device FCM token for testing evidence
   Future<String?> getToken() async {
     return await _messaging.getToken();
   }
