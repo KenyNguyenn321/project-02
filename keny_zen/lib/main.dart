@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
+import 'services/notification_service.dart';
 
 // entry point of app
 void main() async {
@@ -12,6 +13,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // initialize basic FCM notification setup
+  await NotificationService().initialize();
 
   // launch app
   runApp(const MyApp());
@@ -30,7 +34,7 @@ class MyApp extends StatelessWidget {
       // app title
       title: 'Keny-Zen',
 
-      // basic theme (we expand later)
+      // basic theme
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
