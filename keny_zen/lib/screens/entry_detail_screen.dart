@@ -141,7 +141,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
       ),
 
       // entry detail content
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
 
         // vertical layout
@@ -154,6 +154,20 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
             ),
 
             const SizedBox(height: 16),
+
+            // show uploaded image if entry has one
+            if (widget.entry.imageUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  widget.entry.imageUrl!,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+
+            if (widget.entry.imageUrl != null) const SizedBox(height: 16),
 
             // editable or read-only content
             _isEditing
