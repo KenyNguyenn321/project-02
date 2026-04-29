@@ -3,15 +3,14 @@ import '../models/journal_entry.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 
-// displays mood insights and trends
+// shows mood insights + streaks
 class InsightsScreen extends StatelessWidget {
   const InsightsScreen({super.key});
 
-  // count how many times each mood appears
+  // count moods
   Map<String, int> _countMoods(List<JournalEntry> entries) {
     final Map<String, int> moodCounts = {};
 
-    // loop through entries and count moods
     for (final entry in entries) {
       moodCounts[entry.mood] = (moodCounts[entry.mood] ?? 0) + 1;
     }
@@ -19,263 +18,162 @@ class InsightsScreen extends StatelessWidget {
     return moodCounts;
   }
 
-  // find most common mood
-  String _getMostFrequentMood(Map<String, int> moodCounts) {
-    if (moodCounts.isEmpty) {
-      return 'None';
-    }
+  // most frequent mood
+  String _getTopMood(Map<String, int> counts) {
+    if (counts.isEmpty) return 'None';
 
-    String topMood = moodCounts.keys.first;
-    int topCount = moodCounts[topMood] ?? 0;
+    String top = counts.keys.first;
+    int max = counts[top]!;
 
-    // find mood with highest count
-    moodCounts.forEach((mood, count) {
-      if (count > topCount) {
-        topMood = mood;
-        topCount = count;
+    counts.forEach((mood, count) {
+      if (count > max) {
+        top = mood;
+        max = count;
       }
     });
 
-    return topMood;
+    return top;
   }
 
-  // get entries from the last 7 days
-  List<JournalEntry> _getLastSevenDayEntries(List<JournalEntry> entries) {
-    final cutoffDate = DateTime.now().subtract(const Duration(days: 7));
+  // calculate daily streak
+  int _calculateStreak(List<JournalEntry> entries) {
+    if (entries.isEmpty) return 0;
 
-    // keep entries inside 7-day window
-    return entries.where((entry) {
-      return entry.createdAt.isAfter(cutoffDate);
-    }).toList();
+    // sort newest → oldest
+    entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    int streak = 1;
+    DateTime current = entries.first.createdAt;
+
+    for (int i = 1; i < entries.length; i++) {
+      final prev = entries[i].createdAt;
+
+      if (current.difference(prev).inDays == 1) {
+        streak++;
+        current = prev;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
   }
 
-  // generate 7-day trend assistant message
-  String _generateSevenDayTrend(List<JournalEntry> entries) {
-    final recentEntries = _getLastSevenDayEntries(entries);
-
-    if (recentEntries.isEmpty) {
-      return 'No 7-day trend yet. Add entries this week to generate a trend summary.';
+  // simple insight text
+  String _generateInsight(String mood) {
+    if (mood == 'Stressed' || mood == 'Overwhelmed') {
+      return 'You have logged stress frequently. Try taking a short break.';
     }
 
-    final recentMoodCounts = _countMoods(recentEntries);
-    final topRecentMood = _getMostFrequentMood(recentMoodCounts);
-
-    if (topRecentMood == 'Stressed' || topRecentMood == 'Overwhelmed') {
-      return '7-day trend: Stress-related moods appeared most often this week. Suggested action: take a short break, write one cause of stress, and choose one small task to complete first.';
+    if (mood == 'Sad') {
+      return 'You have logged sadness often. Consider talking to someone.';
     }
 
-    if (topRecentMood == 'Sad') {
-      return '7-day trend: Sadness appeared often this week. Suggested action: write about what triggered the feeling and consider reaching out to someone you trust.';
+    if (mood == 'Happy' || mood == 'Calm') {
+      return 'Your recent moods are positive. Keep your routine going.';
     }
 
-    if (topRecentMood == 'Happy' || topRecentMood == 'Calm') {
-      return '7-day trend: Your recent mood pattern is mostly positive. Suggested action: keep doing the routines or environments that supported this mood.';
-    }
-
-    return '7-day trend: Your moods are mixed this week. Suggested action: continue journaling to find clearer patterns over time.';
-  }
-
-  // generate simple rule-based wellness insight
-  String _generateInsight(List<JournalEntry> entries, String topMood) {
-    if (entries.isEmpty) {
-      return 'Start journaling to receive mood insights.';
-    }
-
-    if (topMood == 'Stressed' || topMood == 'Overwhelmed') {
-      return 'You have logged stress often. Consider taking a short break or doing a calming activity.';
-    }
-
-    if (topMood == 'Sad') {
-      return 'You have logged sadness often. Consider writing about what caused it or reaching out to someone you trust.';
-    }
-
-    if (topMood == 'Happy' || topMood == 'Calm') {
-      return 'Your entries show positive emotional patterns. Keep building habits that support this mood.';
-    }
-
-    return 'Your entries show mixed emotions. Continue journaling to better understand your patterns.';
-  }
-
-  // build one simple mood bar
-  Widget _buildMoodBar(String mood, int count, int maxCount) {
-    final double percent = maxCount == 0 ? 0 : count / maxCount;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-
-      // mood row
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('$mood ($count)'),
-
-          const SizedBox(height: 6),
-
-          // visual bar background
-          LinearProgressIndicator(
-            value: percent,
-            minHeight: 10,
-          ),
-        ],
-      ),
-    );
+    return 'Keep journaling to discover patterns.';
   }
 
   @override
   Widget build(BuildContext context) {
-    // service instances
-    final AuthService authService = AuthService();
-    final FirestoreService firestoreService = FirestoreService();
+    final auth = AuthService();
+    final firestore = FirestoreService();
 
-    // current signed-in user
-    final user = authService.currentUser;
+    final user = auth.currentUser;
 
-    // show message if user is missing
     if (user == null) {
-      return const Center(
-        child: Text('Please log in to view insights.'),
-      );
+      return const Center(child: Text('Login required'));
     }
 
     return StreamBuilder<List<JournalEntry>>(
-      // listen to entries for insight generation
-      stream: firestoreService.getEntries(user.uid),
-
-      // rebuild when entries change
+      stream: firestore.getEntries(user.uid),
       builder: (context, snapshot) {
-        // show loading state
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // show error state
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Error loading insights: ${snapshot.error}'),
-          );
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
 
-        // get entries
         final entries = snapshot.data ?? [];
 
-        // mood counts for trends
-        final moodCounts = _countMoods(entries);
-
-        // most common mood
-        final topMood = _getMostFrequentMood(moodCounts);
-
-        // generated wellness suggestion
-        final insight = _generateInsight(entries, topMood);
-
-        // generated 7-day assistant insight
-        final sevenDayTrend = _generateSevenDayTrend(entries);
-
-        // max mood count for chart scaling
-        final int maxCount = moodCounts.isEmpty
-            ? 0
-            : moodCounts.values.reduce((a, b) => a > b ? a : b);
+        final counts = _countMoods(entries);
+        final topMood = _getTopMood(counts);
+        final streak = _calculateStreak(entries);
+        final insight = _generateInsight(topMood);
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-
-          // insights layout
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Mood Insights',
+                'Insights',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
 
               const SizedBox(height: 16),
 
-              // summary card
+              // streak card (NEW)
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-
-                  // summary info
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Total Entries: ${entries.length}'),
-                      const SizedBox(height: 8),
-                      Text('Most Frequent Mood: $topMood'),
+                      const Text(
+                        'Current Streak',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        '$streak days',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              const Text(
-                'Mood Frequency Chart',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 8),
-
-              // chart card
+              // summary
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: moodCounts.isEmpty
-                      ? const Text('No mood data yet.')
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: moodCounts.entries.map((moodEntry) {
-                            return _buildMoodBar(
-                              moodEntry.key,
-                              moodEntry.value,
-                              maxCount,
-                            );
-                          }).toList(),
-                        ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Entries: ${entries.length}'),
+                      Text('Top Mood: $topMood'),
+                    ],
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              const Text(
-                '7-Day Trend Assistant',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 8),
-
-              // must-solve 7-day assistant card
+              // insight
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(sevenDayTrend),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              const Text(
-                'Generated Insight',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 8),
-
-              // rule-based insight
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16),
                   child: Text(insight),
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // challenge boundary
+              // safe note
               const Card(
                 child: Padding(
-                  padding: EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16),
                   child: Text(
-                    'These insights are rule-based wellness reflections only. Keny-Zen avoids diagnosis, avoids medical claims, and keeps the user in control of interpretation.',
+                    'This app provides wellness reflections only and does not diagnose or replace professional care.',
                   ),
                 ),
               ),
