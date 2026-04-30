@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/journal_entry.dart';
 import '../services/firestore_service.dart';
+import '../utils/mood_colors.dart';
 
 // screen that shows one journal entry in detail
 class EntryDetailScreen extends StatefulWidget {
@@ -122,6 +123,9 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // mood color
+    final moodColor = getMoodColor(_selectedMood);
+
     return Scaffold(
       // top app bar
       appBar: AppBar(
@@ -148,26 +152,47 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // image preview from Firebase Storage
+            if (widget.entry.imageUrl != null &&
+                widget.entry.imageUrl!.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.network(
+                  widget.entry.imageUrl!,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+
+                  // loading indicator
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+
+                    return const SizedBox(
+                      height: 200,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  },
+
+                  // fallback if image fails
+                  errorBuilder: (context, error, stackTrace) {
+                    return const SizedBox(
+                      height: 200,
+                      child: Center(child: Text('Image could not load.')),
+                    );
+                  },
+                ),
+              ),
+
+            if (widget.entry.imageUrl != null &&
+                widget.entry.imageUrl!.isNotEmpty)
+              const SizedBox(height: 16),
+
             const Text(
               'Journal Entry',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 16),
-
-            // show uploaded image if entry has one
-            if (widget.entry.imageUrl != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  widget.entry.imageUrl!,
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-
-            if (widget.entry.imageUrl != null) const SizedBox(height: 16),
 
             // editable or read-only content
             _isEditing
@@ -178,9 +203,14 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                       border: OutlineInputBorder(),
                     ),
                   )
-                : Text(
-                    widget.entry.content,
-                    style: const TextStyle(fontSize: 16),
+                : Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        widget.entry.content,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
                   ),
 
             const SizedBox(height: 16),
@@ -204,15 +234,25 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                       });
                     },
                   )
-                : Text(
-                    'Mood: ${widget.entry.mood}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                : Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: moodColor.withAlpha(45),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      widget.entry.mood,
+                      style: TextStyle(
+                        color: moodColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
 
             // created date
             Text(
